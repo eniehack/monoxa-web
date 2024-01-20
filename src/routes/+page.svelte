@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
     import { type Writable, writable } from "svelte/store";
-    import stopIcon from "bootstrap-icons/icons/stop-fill.svg";
-    import recordIcon from "bootstrap-icons/icons/record-fill.svg";
+    import { IconPlayerStopFilled, IconPlayerRecordFilled } from "@tabler/icons-svelte";
 
     type RecordingState = "recording" | "recorded" | "notstarted" ;
     const RECORDING_CODEC = "audio/webm; codec=vorbis";
@@ -96,24 +95,30 @@
 
 <svelte:window on:keydown={handleRecordingStartByKey} on:keyup={handleRecordingStopByKey}/>
 
-<button id="record-btn" bind:this={recordBtn} on:pointerdown={handleRecordingStartByClick} on:pointerup={handleRecordingStopByClick}>
-    {#if $recordingState === "recording"}
-        <img src={stopIcon} alt="record stop"/>
-        離してstop
-    {:else}
-        <img src={recordIcon} alt="record start"/>
-        spaceキーかタップしてstart       
+<div class="flex flex-col place-item-center" id="content">
+    <button id="record-btn" class="rounded-full bg-red-600 text-white" bind:this={recordBtn} on:pointerdown={handleRecordingStartByClick} on:pointerup={handleRecordingStopByClick}>
+        {#if $recordingState === "recording"}
+            <IconPlayerStopFilled color="gray-100" size={100}/>
+        {:else}
+            <IconPlayerRecordFilled color="gray-100" size={100} />    
+        {/if}
+    </button>
+    <p>
+        {#if $recordingState === "recording"}
+            離してstop
+        {:else}
+            spaceキーかタップしてstart       
+        {/if}
+    </p>
+    
+    <audio id="player" bind:this={playerElem} controls></audio>
+    
+    {#if $recordingState === "recorded" && $blob !== null}
+        <a href={$voiceURL}>download</a>
     {/if}
-</button>
-<audio id="player" bind:this={playerElem} controls></audio>
+</div>
 
-{#if $recordingState === "recorded" && $blob !== null}
-    <a href={$voiceURL}>download</a>
-    {$voiceURL}
-{/if}
-
-
-<style>
+<style lang="postcss">
     #record-btn {
         border-radius: 50%;
         display: flex;
@@ -121,10 +126,15 @@
         align-items: center;
         width: 200px;
         height: 200px;
-        background: red;
-        color: #FFF;
         text-decoration: none;
         text-align: center;
         margin: 10px 0;
+    }
+
+    #content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 </style>
