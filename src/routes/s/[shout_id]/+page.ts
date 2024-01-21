@@ -21,7 +21,7 @@ const contents: Record<string, Recording> = {
             name: "なかやばし"
         },
         script: "えーと今は2024年1月19日の17時ですえっと今はせっかくの動画を作ろうと思って 今なんかデモ音源みたいなものを撮っています うーんなんかまあ動画を作るのめんどくさいんで とりあえず録音でもしようかなという感じです うーんまあ喋る こと特にないかな あとはまあそんなところでしょうか まあなんか残り少ないですけど頑張りまーす っていうところで以上です",
-        title: "てすと",
+        title: "動画を作るにあたって",
     },
     "01HME4VVMBFYQT2YC5HH10T9TG": {
         file: "/01HME4VVMBFYQT2YC5HH10T9TG.ogg",
@@ -40,16 +40,16 @@ const contents: Record<string, Recording> = {
         },
         script: "そうすると 先ほどと同じように このような形で さっきと同じような 録音されている状態になります そして もう1回話します",
         title: "デモ",
-    },/*
-    "01HME4VVMBVYKQFXTG4D03WMXX": {
-        file: "https://upload.wikimedia.org/wikipedia/commons/4/4f/2020_Corona_Virus_Shock_Announce_at_Higashi-Osaka.ogg",
+    },
+    "01HMQBCK83659S4F0AH37YEQJ9": {
+        file: "/01HMQBCK83659S4F0AH37YEQJ9.ogg",
         user: {
             id: "eniehack",
             name: "なかやばし"
         },
-        script: "あああ",
-        title: "てすと",
-    },
+        script: "今は、2024年1月22日の9時12分です。 6時くらいまで作業してて、せっかくの動画を作っていて、めちゃくちゃ眠いし、 なんか、睡眠時間が足りない時の特有の腕の痛さというか、謎の筋肉痛みたいなのに襲われていますというか、があります 。 今、とりあえず後はデモを作って、時間を削るところをやらないとまずいので、その辺を今からやって、直せるかな、あんまり。 なんかあんまり、動画の内容が微妙だなという感じだったんですよね。 話す。ゼミの時は人がいたい、人に向かって説明するみたい な体で喋ってたんですけど、一人で話すみたいな感じになると、どうもうまく説明がいかない。 どうしたもんかなーっていう感じで すよね。 とりあえず頑張りますという感じです。",
+        title: "動画提出の朝",
+    },/*
     "01HME4VVMBZ8DY6NEX2WDZ4P5P": {
         file: "https://upload.wikimedia.org/wikipedia/commons/4/4f/2020_Corona_Virus_Shock_Announce_at_Higashi-Osaka.ogg",
         user: {
