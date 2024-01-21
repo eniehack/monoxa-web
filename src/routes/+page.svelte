@@ -3,58 +3,26 @@
     import { type Writable, writable } from "svelte/store";
     import { IconPlayerStopFilled, IconPlayerRecordFilled } from "@tabler/icons-svelte";
 
-    type RecordingState = "recording" | "recorded" | "notstarted" ;
     const RECORDING_CODEC = "audio/webm; codec=vorbis";
-    const SPACE_KEY = "Space";
+    //const RECORDING_CODEC = "audio/ogg; codec=vorbis";
 
-    let recordBtn;
-    let playerElem: HTMLAudioElement;
-    let downloadElem: HTMLAnchorElement;    
+    let contentElem: HTMLDivElement;    
     let mediaRecorder: Writable<MediaRecorder | undefined> = writable();
     let chunks: Writable<Blob[]> = writable([]);
     let blob: Writable<Blob> = writable();
-    let voiceURL: Writable<string> = writable();
-    let recordingState: Writable<RecordingState> = writable("notstarted");
+    let isRecording: Writable<Boolean> = writable();
 
-    const handleRecordingStop = () => {
-        if ($recordingState === "recording" && typeof $mediaRecorder !== "undefined") {
+    const handleRecording = () => {
+        if (typeof $mediaRecorder === "undefined") return;
+        if ($isRecording) {
+            console.log("にょん")
             $mediaRecorder.stop();
-            console.log("saved");
-            //$mediaRecorder = undefined;
-            return
+            return;
         }
+        console.log("にょんにょん")
+        $mediaRecorder.start();        
     }
 
-    const handleRecording = async () => {
-        if (typeof $mediaRecorder === "undefined" || $recordingState === "recording") return
-        $mediaRecorder.start()
-    }
-
-    const handleRecordingStartByKey = (e: KeyboardEvent) => {
-        if (e.code !== SPACE_KEY || $recordingState === "recording") return;
-        console.log("keydown")
-        console.log(e)
-        handleRecording();
-    }
-
-    const handleRecordingStopByKey = (e: KeyboardEvent) => {
-        if (e.code !== SPACE_KEY || $recordingState !== "recording") return; 
-        console.log("keyup")
-        console.log(e)
-        handleRecordingStop();
-    }
-
-    const handleRecordingStartByClick = (e: UIEvent) => {
-        console.log("keydown")
-        console.log(e)
-        handleRecording();
-    }
-
-    const handleRecordingStopByClick = (e: UIEvent) => {
-        console.log("keyup")
-        console.log(e)
-        handleRecordingStop();
-    }
 
     onMount(async () => {
         if (!navigator.mediaDevices) {
@@ -65,61 +33,50 @@
             window.alert("unsupported mime type")
             return
         }
-        recordingState.subscribe(s => {
-            if (s === "recorded") {
-                playerElem.style.visibility = "visible"
-            } else {
-                playerElem.style.visibility = "hidden"
-            }
-        })
         const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-        $mediaRecorder = new MediaRecorder(stream, {mimeType: RECORDING_CODEC});
+        $mediaRecorder = new MediaRecorder(stream);
         $mediaRecorder.ondataavailable = (e) => {
             $chunks.push(e.data);
         }
         $mediaRecorder.onstart = () => {
-            recordingState.set("recording");
-            console.log("start")
+            isRecording.set(true);
         }
         $mediaRecorder.onstop = () => {
-            console.log("stoping")
+            isRecording.set(false);
             $blob = new Blob($chunks, {type: RECORDING_CODEC});
-            console.log($chunks)
             $chunks = [];
-            recordingState.set("recorded");
-            playerElem.src = URL.createObjectURL($blob);
-            voiceURL.set(URL.createObjectURL($blob));
+            let player = document.createElement("audio");
+            player.src = URL.createObjectURL($blob);
+            player.controls = true;
+            let download = document.createElement("a");
+            download.href = URL.createObjectURL($blob);
+            download.download = "audio.webm";
+            download.innerText = "download";
+            contentElem.appendChild(player);
+            contentElem.appendChild(download);
         }
     });
 </script>
 
-<svelte:window on:keydown={handleRecordingStartByKey} on:keyup={handleRecordingStopByKey}/>
-
-<div class="flex flex-col place-item-center" id="content">
-    <button id="record-btn" class="rounded-full bg-red-600 text-white" bind:this={recordBtn} on:pointerdown={handleRecordingStartByClick} on:pointerup={handleRecordingStopByClick}>
-        {#if $recordingState === "recording"}
+<div class="flex flex-col place-item-center" id="content" bind:this={contentElem}>
+    <button class="bg-red-500 text-white recorder__btn" on:click={handleRecording}>
+        {#if $isRecording}
             <IconPlayerStopFilled color="gray-100" size={100}/>
         {:else}
-            <IconPlayerRecordFilled color="gray-100" size={100} />    
+            <IconPlayerRecordFilled color="gray-100" size={100} />
         {/if}
     </button>
     <p>
-        {#if $recordingState === "recording"}
-            離してstop
+        {#if $isRecording}
+            クリックして停止
         {:else}
-            spaceキーかタップしてstart       
+            クリックしてスタート
         {/if}
     </p>
-    
-    <audio id="player" bind:this={playerElem} controls></audio>
-    
-    {#if $recordingState === "recorded" && $blob !== null}
-        <a href={$voiceURL}>download</a>
-    {/if}
 </div>
 
 <style lang="postcss">
-    #record-btn {
+    .recorder__btn {
         border-radius: 50%;
         display: flex;
         justify-content: center;
