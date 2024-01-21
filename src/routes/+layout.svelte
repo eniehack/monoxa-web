@@ -1,15 +1,19 @@
-<main class="container mx-auto">
+<script>
+    
+</script>
+
+<header>
+    <a href="/">voicelog</a>
+</header>
+<main class="container">
     <slot />
 </main>
 <footer>
     <a href="http://github.com/eniehack/sechack-demo-voicelog">GitHub</a>
 </footer>
 
-<script>
-    import "../app.css";
-</script>
-
-<style>
+<style lang="postcss">
+    @import "bootstrap/dist/css/bootstrap.min.css";
     footer {
         position: fixed;
         bottom: 0;
