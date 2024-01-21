@@ -6,23 +6,25 @@
 </script>
 
 <div id="content">
-    <audio src={data.file} controls></audio>
     <h1>{data.title}</h1>
+    <audio src={data.file} controls></audio>
     <div class="flex items-center">
         <IconUserFilled size={18}/>
-        <a class="decoration-sky-600 hover:decoration-blue-400" href={`/@${data.user.id}`}>{data.user.name}</a>
+        <a href={`/@${data.user.id}`}>{data.user.name}</a>
     </div>
-    <div class="">
-        <IconScript size={18} />
-        <p>{data.script}</p>
-    </div>
+    <p id="script">{data.script}</p>
 </div>
 
 <style>
+    /*
     #content {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+    } */
+    #script {
+        height: 500px;
+        overflow-y: scroll;
     }
 </style>
