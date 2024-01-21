@@ -22,7 +22,7 @@ const contents: Record<string, Recording> = {
         },
         script: "えーと今は2024年1月19日の17時ですえっと今はせっかくの動画を作ろうと思って 今なんかデモ音源みたいなものを撮っています うーんなんかまあ動画を作るのめんどくさいんで とりあえず録音でもしようかなという感じです うーんまあ喋る こと特にないかな あとはまあそんなところでしょうか まあなんか残り少ないですけど頑張りまーす っていうところで以上です",
         title: "てすと",
-    },/*
+    },
     "01HME4VVMBFYQT2YC5HH10T9TG": {
         file: "/01HME4VVMBFYQT2YC5HH10T9TG.ogg",
         user: {
@@ -33,14 +33,14 @@ const contents: Record<string, Recording> = {
         title: "動画第1稿@思索ゼミ 2024/01/14",
     },
     "01HME4VVMBGGMG506BGYYFXZM3": {
-        file: "https://upload.wikimedia.org/wikipedia/commons/4/4f/2020_Corona_Virus_Shock_Announce_at_Higashi-Osaka.ogg",
+        file: "/01HME4VVMBGGMG506BGYYFXZM3.ogg",
         user: {
             id: "eniehack",
             name: "なかやばし"
         },
-        script: "あああ",
-        title: "てすと",
-    },
+        script: "そうすると 先ほどと同じように このような形で さっきと同じような 録音されている状態になります そして もう1回話します",
+        title: "デモ",
+    },/*
     "01HME4VVMBVYKQFXTG4D03WMXX": {
         file: "https://upload.wikimedia.org/wikipedia/commons/4/4f/2020_Corona_Virus_Shock_Announce_at_Higashi-Osaka.ogg",
         user: {
