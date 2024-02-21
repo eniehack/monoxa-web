@@ -1,4 +1,5 @@
 <script>
+	import "../app.css";
 </script>
 
 <header>
@@ -13,7 +14,7 @@
 </footer>
 
 <style lang="postcss">
-	@import 'bootstrap/dist/css/bootstrap.min.css';
+	/*@import 'bootstrap/dist/css/bootstrap.min.css';*/
 	footer {
 		position: fixed;
 		bottom: 0;
