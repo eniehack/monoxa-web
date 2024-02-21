@@ -2,6 +2,9 @@
 	import { onMount } from 'svelte';
 	import { type Writable, writable } from 'svelte/store';
 	import { IconPlayerStopFilled, IconPlayerRecordFilled } from '@tabler/icons-svelte';
+	import { authStore } from '$lib/store';
+	import { PUBLIC_BACKEND_HOSTNAME } from "$env/static/public";
+	import { getAuth } from 'firebase/auth';
 
 	const RECORDING_CODEC = 'audio/webm; codec=vorbis';
 	//const RECORDING_CODEC = "audio/ogg; codec=vorbis";
@@ -11,6 +14,9 @@
 	let chunks: Writable<Blob[]> = writable([]);
 	let blob: Writable<Blob> = writable();
 	let isRecording: Writable<Boolean> = writable();
+	let playerElm: HTMLAudioElement;
+	let downloadElm: HTMLAnchorElement;
+	const backend = new URL(PUBLIC_BACKEND_HOSTNAME);
 
 	const handleRecording = () => {
 		if (typeof $mediaRecorder === 'undefined') return;
@@ -22,6 +28,29 @@
 		console.log('にょんにょん');
 		$mediaRecorder.start();
 	};
+
+	const uploadRecording = async () => {
+		if ($authStore.loggedIn === false || getAuth().currentUser === null) {
+			console.error("not loggined")
+			return
+		}
+		console.debug("loggedin")
+		const uploadEndpoint = new URL("/api/shout/new", backend);
+		const body = new FormData();
+		body.append("shout", $blob);
+		const resp = await fetch(uploadEndpoint, {
+			//credentials: "include",
+			headers: {
+				"Authorization": `Bearer ${await getAuth().currentUser?.getIdToken()}`
+			},
+			body: body,
+			method: "POST"
+		});
+		if (resp.ok === false) {
+			console.error(resp);
+		}
+		console.log(resp);
+	}
 
 	onMount(async () => {
 		if (!navigator.mediaDevices) {
@@ -44,21 +73,18 @@
 			isRecording.set(false);
 			$blob = new Blob($chunks, { type: RECORDING_CODEC });
 			$chunks = [];
-			let player = document.createElement('audio');
-			player.src = URL.createObjectURL($blob);
-			player.controls = true;
-			let download = document.createElement('a');
-			download.href = URL.createObjectURL($blob);
-			download.download = 'audio.webm';
-			download.innerText = 'download';
-			contentElem.appendChild(player);
-			contentElem.appendChild(download);
+			playerElm.src = URL.createObjectURL($blob);
+			/*
+			downloadElm.href = URL.createObjectURL($blob);
+			downloadElm.download = 'audio.webm';
+			downloadElm.innerText = 'download';
+			*/
 		};
 	});
 </script>
 
 <div class="flex flex-col place-item-center" id="content" bind:this={contentElem}>
-	<button class="bg-red-500 text-white recorder__btn" on:click={handleRecording}>
+	<button class="btn btn-error btn-circle recorder__btn" on:click={handleRecording}>
 		{#if $isRecording}
 			<IconPlayerStopFilled color="gray-100" size={100} />
 		{:else}
@@ -72,7 +98,14 @@
 			クリックしてスタート
 		{/if}
 	</p>
+	<audio bind:this={playerElm} controls></audio>
+	{#if $isRecording === false}
+		<button class="btn btn-primary" type="button" on:click={uploadRecording}>
+			投稿
+		</button>
+	{/if}
 </div>
+
 
 <style lang="postcss">
 	.recorder__btn {
