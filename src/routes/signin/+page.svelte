@@ -1,36 +1,46 @@
 <script lang="ts">
-	import { initializeApp, type FirebaseOptions, getApps } from 'firebase/app';
-	import { env } from '$env/dynamic/public';
 	import {
 		getAuth,
 		GoogleAuthProvider,
-		signInWithPopup
+		signInWithPopup,
+		setPersistence,
+		browserLocalPersistence
 	} from 'firebase/auth';
 	import { authStore } from '$lib/store';
 	import { goto } from '$app/navigation';
+	import { PUBLIC_BACKEND_HOSTNAME } from '$env/static/public';
+	import { auth } from '$lib/firebase';
 
-	const firebaseConfig: FirebaseOptions = {
-		apiKey: env.PUBLIC_FIREBASE_API_KEY,
-		authDomain: env.PUBLIC_FIREBASE_AUTHDOMAIN,
-		projectId: env.PUBLIC_FIREBASE_PROJECTID,
-		storageBucket: env.PUBLIC_FIREBASE_STORAGEBUCKET,
-		messagingSenderId: env.PUBLIC_FIREBASE_MESSAGINGSENDERID,
-		appId: env.PUBLIC_FIREBASE_APPID
+	const checkExists = async (): Promise<boolean> => {
+		const endpoint = new URL('/api/v1/user/me', PUBLIC_BACKEND_HOSTNAME);
+		const resp = await fetch(endpoint, {
+			credentials: 'include',
+			headers: {
+				Authorization: `Bearer ${await getAuth().currentUser?.getIdToken()}`
+			}
+		});
+		if (resp.status === 404) {
+			return false;
+		} else if (resp.ok === false) {
+			throw new Error(`/api/v1/user/me request failed ${resp.status}`);
+		}
+		return true;
 	};
-
-	let app;
-	if (!getApps().length) {
-		app = initializeApp(firebaseConfig);
-	}
-	const auth = getAuth(app);
 	const handleGoogleLogin = async () => {
+		await setPersistence(auth, browserLocalPersistence);
 		signInWithPopup(auth, new GoogleAuthProvider())
 			.then((res) => {
 				if (res === null) {
 					throw new Error('res is null');
 				}
-				authStore.set({ loggedIn: true, user: res.user });
-				goto('/record');
+				authStore.set({ loggedIn: true, user: res.user, notebooks: undefined });
+			})
+			.then(async () => {
+				if (!(await checkExists())) {
+					goto('/register');
+				} else {
+					goto('/record');
+				}
 			})
 			.catch((e) => {
 				console.error(e);

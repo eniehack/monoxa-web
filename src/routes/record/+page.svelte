@@ -3,8 +3,10 @@
 	import { type Writable, writable } from 'svelte/store';
 	import { IconPlayerStopFilled, IconPlayerRecordFilled } from '@tabler/icons-svelte';
 	import { authStore } from '$lib/store';
-	import { PUBLIC_BACKEND_HOSTNAME } from "$env/static/public";
-	import { getAuth } from 'firebase/auth';
+	import { PUBLIC_BACKEND_HOSTNAME } from '$env/static/public';
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { auth, initFirebaseAuth } from '$lib/firebase';
 
 	const RECORDING_CODEC = 'audio/webm; codec=vorbis';
 	//const RECORDING_CODEC = "audio/ogg; codec=vorbis";
@@ -18,6 +20,21 @@
 	let downloadElm: HTMLAnchorElement;
 	const backend = new URL(PUBLIC_BACKEND_HOSTNAME);
 
+	const fetchNotebooks = async (): Promise<{ notebook_id: string }[]> => {
+		const endpoint = new URL('/api/v1/user/me', PUBLIC_BACKEND_HOSTNAME);
+		const resp = await fetch(endpoint, {
+			credentials: 'include',
+			headers: {
+				Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`
+			}
+		});
+		if (resp.ok === false) {
+			throw new Error(`/api/v1/user/me request failed ${resp.status}`);
+		}
+		const body = await resp.json();
+		return body['notebooks'] satisfies { notebook_id: string }[];
+	};
+
 	const handleRecording = () => {
 		if (typeof $mediaRecorder === 'undefined') return;
 		if ($isRecording) {
@@ -30,56 +47,81 @@
 	};
 
 	const uploadRecording = async () => {
-		if ($authStore.loggedIn === false || getAuth().currentUser === null) {
-			console.error("not loggined")
-			return
+		if (typeof $authStore.notebooks === 'undefined') {
+			return;
 		}
-		console.debug("loggedin")
-		const uploadEndpoint = new URL("/api/shout/new", backend);
+		console.debug('loggedin');
+		const uploadEndpoint = new URL(
+			`/api/v1/notebook/${$authStore.notebooks[0].notebook_id}/shout/new`,
+			backend
+		);
 		const body = new FormData();
-		body.append("shout", $blob);
+		body.append('shout', $blob);
 		const resp = await fetch(uploadEndpoint, {
-			//credentials: "include",
+			credentials: 'include',
 			headers: {
-				"Authorization": `Bearer ${await getAuth().currentUser?.getIdToken()}`
+				Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`
 			},
 			body: body,
-			method: "POST"
+			method: 'POST'
 		});
 		if (resp.ok === false) {
 			console.error(resp);
 		}
 		console.log(resp);
-	}
+	};
 
 	onMount(async () => {
-		if (!navigator.mediaDevices) {
-			window.alert('mediadevices is unavailable');
-			return;
-		}
-		if (!MediaRecorder.isTypeSupported(RECORDING_CODEC)) {
-			window.alert('unsupported mime type');
-			return;
-		}
-		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-		$mediaRecorder = new MediaRecorder(stream);
-		$mediaRecorder.ondataavailable = (e) => {
-			$chunks.push(e.data);
-		};
-		$mediaRecorder.onstart = () => {
-			isRecording.set(true);
-		};
-		$mediaRecorder.onstop = () => {
-			isRecording.set(false);
-			$blob = new Blob($chunks, { type: RECORDING_CODEC });
-			$chunks = [];
-			playerElm.src = URL.createObjectURL($blob);
-			/*
+		if (browser) {
+			await initFirebaseAuth(auth)
+				.then((user) => {
+					console.log("loggedin")
+					$authStore = { loggedIn: true, user: user, notebooks: undefined };
+				})
+				.catch((res) => {
+					console.error('not loggined:', res);
+					goto('/signin');
+				});
+
+			if ($authStore.loggedIn && auth.currentUser !== null) {
+				authStore.update((auth) => {
+					fetchNotebooks()
+						.then((notebooks) => (auth.notebooks = notebooks))
+						.catch((e: Error) => {
+							console.error(e.message);
+							goto('/signin');
+						});
+					return auth;
+				});
+			}
+			if (!navigator.mediaDevices) {
+				window.alert('mediadevices is unavailable');
+				return;
+			}
+			if (!MediaRecorder.isTypeSupported(RECORDING_CODEC)) {
+				window.alert('unsupported mime type');
+				return;
+			}
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			$mediaRecorder = new MediaRecorder(stream);
+			$mediaRecorder.ondataavailable = (e) => {
+				$chunks.push(e.data);
+			};
+			$mediaRecorder.onstart = () => {
+				isRecording.set(true);
+			};
+			$mediaRecorder.onstop = () => {
+				isRecording.set(false);
+				$blob = new Blob($chunks, { type: RECORDING_CODEC });
+				$chunks = [];
+				playerElm.src = URL.createObjectURL($blob);
+				/*
 			downloadElm.href = URL.createObjectURL($blob);
 			downloadElm.download = 'audio.webm';
 			downloadElm.innerText = 'download';
 			*/
-		};
+			};
+		}
 	});
 </script>
 
@@ -100,12 +142,16 @@
 	</p>
 	<audio bind:this={playerElm} controls></audio>
 	{#if $isRecording === false}
-		<button class="btn btn-primary" type="button" on:click={uploadRecording}>
-			投稿
-		</button>
+		{#if typeof $authStore.notebooks !== 'undefined'}
+			<select>
+				{#each $authStore.notebooks as note}
+					<option value={note['notebook_id']}>{note['notebook_id']}</option>
+				{/each}
+			</select>
+		{/if}
+		<button class="btn btn-primary" type="button" on:click={uploadRecording}> 投稿 </button>
 	{/if}
 </div>
-
 
 <style lang="postcss">
 	.recorder__btn {
